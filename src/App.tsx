@@ -1,4 +1,5 @@
 import Dashboard from "./components/Dashboard"
+import { ChakraBaseProvider, ChakraProvider } from "@chakra-ui/react";
 //import { invoke } from "@tauri-apps/api/tauri";
 
 function App() {
@@ -9,7 +10,9 @@ function App() {
   // }
 
   return (
-    <Dashboard />
+    <ChakraProvider>
+      <Dashboard />
+    </ChakraProvider>
   );
 }
 
