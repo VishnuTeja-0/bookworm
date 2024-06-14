@@ -8,7 +8,9 @@ function Dashboard() {
     return(
         <div className="dashboard-root">
             <Header />
-            <ListArea />
+            <div className="dashboard-body">
+                <ListArea />
+            </div>
         </ div>
     )
 }

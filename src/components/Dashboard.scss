@@ -1,3 +1,15 @@
+$border-blue: #06132e;
+
 .dashboard-root{
-    background-color: #06132e;;
+    background-color: $border-blue;
+}
+
+.dashboard-body{
+    width: 100%;
+    display: flex;
+}
+
+.listarea-root{
+    width: 60%;
+    border-right: 5px solid #020c1f
 }
