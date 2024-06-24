@@ -1,4 +1,6 @@
+import { IPageData } from "./IPageData";
+
 export interface IListData{
     category: string;
-    pageList: {name: string, id: number}[];
+    pageList: IPageData[];
 }

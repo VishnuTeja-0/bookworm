@@ -1,19 +1,29 @@
+import {invoke} from '@tauri-apps/api/tauri';
 import { Button, ButtonGroup, Accordion, AccordionItem, AccordionButton, Box, AccordionPanel, Card } from "@chakra-ui/react";
 import { FaPlus } from "react-icons/fa";
 import './ListArea.scss';
-import { IPageData } from "../../models/IPageData";
 import { IListData } from "../../models/IListData";
-
-let testPageData: IPageData[] = [
-    {id: 2,name: "Job Finder", url: "https://www.linkedin.com/", 
-    description: "Please I need to feed my kids. I am tired of eating the roots of my neighbour's flowerpots",
-    category: "Enlightenment"},
-    {id: 1, name: "Google", url: "https://www.google.com/", description: "Search stuff", category: "Entertainment"},
-    {id: 3,name: "YouTube", url: "https://www.youtube.com/", description: "Watch stuff", category: "Entertainment"},
-];
+import { useEffect, useState } from 'react';
 
 function ListArea(){
+    const [listData, setPageData] = useState<IListData[]>([]);
+
+    useEffect(() => {
+        invoke<string>('get_pages_listview')
+        .then((res) => {
+            console.log(res);
+            let json = JSON.parse(res);
+            setPageData(json); 
+        })
+        .catch((message) => {
+            console.log(message);
+            alert(message);
+        });
+        
+    }, [])
+
     return(
+        listData && listData.length == 0 ? <></> :
         <div className="listarea-root">
             <ButtonGroup>
                 <Button colorScheme='green' variant='solid' leftIcon={<FaPlus />}>Add Page</Button>
@@ -21,7 +31,7 @@ function ListArea(){
 
             <Accordion allowMultiple textColor={'white'} mt={4}>
                 {
-                    listViewData.map(listItem =>(
+                    listData.map(listItem =>(
                         <AccordionItem>
                             <h2>
                                 <AccordionButton>

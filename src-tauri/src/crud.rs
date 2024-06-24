@@ -2,15 +2,16 @@ extern crate directories;
 
 use rusqlite::{Connection, Result};
 use directories::{BaseDirs, ProjectDirs};
+use serde::{Deserialize, Serialize};
 use std::path::{Path,PathBuf};
 
 const DB_NAME: &str = "pages.db";
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Page{
     pub id: u32,
     pub name: String,
-    pub link: String,
+    pub url: String,
     pub description: String,
     pub category: String
 }
@@ -44,11 +45,12 @@ pub fn create_database() -> Result<()>{
     Ok(())
 }
 
-pub fn get_entries() -> Result<()>{
+pub fn get_entries() -> Result<Vec<Page>>{
     let connection = Connection::open(get_db_path())?;
 
     let mut stmt = connection.prepare(
-        "SELECT p.id, p.name, p.link, p.desc, p.category from pages p"
+        "SELECT p.id, p.name, p.link, p.desc, p.category FROM pages p
+        ORDER BY p.category, p.id"
     )?;
 
     let pages_iter = stmt.query_map([], |row| {
@@ -56,17 +58,19 @@ pub fn get_entries() -> Result<()>{
             Page{
                 id: row.get(0)?,
                 name: row.get(1)?,
-                link: row.get(2)?,
+                url: row.get(2)?,
                 description: row.get(3)?,
                 category: row.get(4)?,
             }
         )
     })?;
+
+    let mut pages: Vec<Page> = Vec::new();
     for page in pages_iter{
-        println!("Page {:?}", page.unwrap());
+        pages.push(page?);
     }
 
-    Ok(())
+    Ok(pages)
 }
 
 pub fn create_entry(page: Page) -> Result<()>{
@@ -74,7 +78,7 @@ pub fn create_entry(page: Page) -> Result<()>{
 
     connection.execute(
         "INSERT INTO pages (name, link, desc, category) VALUES (?1, ?2, ?3, ?4)", 
-        (&page.name, &page.link, &page.description, &page.category)
+        (&page.name, &page.url, &page.description, &page.category)
     )?;
 
     Ok(())  
