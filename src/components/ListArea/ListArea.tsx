@@ -1,5 +1,5 @@
 import {invoke} from '@tauri-apps/api/tauri';
-import { Button, ButtonGroup, Accordion, AccordionItem, AccordionButton, Box, AccordionPanel, Card } from "@chakra-ui/react";
+import { Button, ButtonGroup, Accordion, AccordionItem, AccordionButton, Box, AccordionPanel} from "@chakra-ui/react";
 import { FaPlus } from "react-icons/fa";
 import './ListArea.scss';
 import { IListData } from "../../models/IListData";
@@ -29,19 +29,17 @@ function ListArea(){
                 <Button colorScheme='green' variant='solid' leftIcon={<FaPlus />}>Add Page</Button>
             </ButtonGroup>
 
-            <Accordion allowMultiple textColor={'white'} mt={4}>
+            <Accordion className={'list'} allowMultiple textColor={'white'} mt={4}>
                 {
                     listData.map(listItem =>(
                         <AccordionItem>
-                            <h2>
-                                <AccordionButton>
+                                <AccordionButton className={'button'} p={4}>
                                     <Box as='span' flex='1' textAlign='left'>{listItem.category}</Box>
                                 </AccordionButton>
-                            </h2>
-                            <AccordionPanel pb={4}>
+                            <AccordionPanel className={'panel'} pb={4}>
                                 {
                                     listItem.pageList.map(pageItem =>(
-                                        <div className="page-item" data-id={pageItem.id}>
+                                        <div className="item" data-id={pageItem.id}>
                                             {pageItem.name}
                                         </div>
                                     ))

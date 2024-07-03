@@ -58,7 +58,7 @@ fn get_pages_listview() -> String {
             let mut current_category: Option<String>;
             let mut current_category_pages: Vec<Page> = Vec::new();
             let length = pages.len();
-            if(length > 0){
+            if length > 0 {
                 current_category = Some(pages[0].category.clone());
                 for (index, page) in pages.iter().enumerate() {
                     if index == 0 {
@@ -77,7 +77,7 @@ fn get_pages_listview() -> String {
                             );
 
                             current_category = Some(String::from(&page.category));
-                            current_category_pages = Vec::new();
+                            current_category_pages = vec![page.clone()];
                         }
                     }
 
@@ -99,7 +99,7 @@ fn get_pages_listview() -> String {
                 Err(err) => handle_error(GetError.message(), &err)
             }
         },
-        Err(err) => {println!("NOkay"); handle_error(GetError.message(), &err)}
+        Err(err) => handle_error(GetError.message(), &err)
     }
 }
 
@@ -123,10 +123,10 @@ fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Erro
         Ok(_) => {
             // let test_page = Page{
             //     id: 0,
-            //     name: String::from("testSite"),
-            //     url: String::from("https://doc.rust-lang.org/book/ch09-00-error-handling.html"),
+            //     name: String::from("Literally Google"),
+            //     url: String::from("https://www.google.com"),
             //     description: String::from("This is a test site"),
-            //     category: String::from("Dev Test Sites")
+            //     category: String::from("Dev Test Sites 2")
             // };
             // let create_result = create_entry(test_page);
             // match create_result{
@@ -149,8 +149,10 @@ fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Erro
 
             let get_result = get_entries();
             match get_result{
-                Ok(_) => {
-
+                Ok(pages) => {
+                    for page in pages {
+                        println!("{}", page);
+                    }
                 }
                 Err(err) => {
                     println!("{}", err);

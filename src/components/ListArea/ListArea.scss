@@ -1,3 +1,30 @@
+$header-theme: #01060f;
+$header-hover: rgba(42, 59, 95, 0.2);
+$panel-theme: #020c1f;
+$item-hover: rgba(46, 59, 79, 0.7);
+
 .listarea-root{
     padding: 40px 5%;
+}
+
+.list{
+    border: 1px solid $header-theme;
+
+    .button{
+        background-color: $header-theme;
+
+        &:hover {
+            background-color: $header-hover;
+        }
+    }
+
+    .panel{
+        background-color: $panel-theme;
+    }
+
+    .item{
+        &:hover {
+            background-color: $item-hover;
+        }
+    }
 }

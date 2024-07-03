@@ -3,6 +3,7 @@ extern crate directories;
 use rusqlite::{Connection, Result};
 use directories::{BaseDirs, ProjectDirs};
 use serde::{Deserialize, Serialize};
+use core::fmt;
 use std::path::{Path,PathBuf};
 
 const DB_NAME: &str = "pages.db";
@@ -14,6 +15,12 @@ pub struct Page{
     pub url: String,
     pub description: String,
     pub category: String
+}
+
+impl fmt::Display for Page {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Page -> {{ id: {}, name: {}, category: {}}}", self.id, self.name, self.category)
+    }
 }
 
 pub fn get_db_path() -> PathBuf {
