@@ -1,0 +1,62 @@
+@import "/src/styles.scss";
+
+$button-color: #01060f;
+$button-hover-color: #2a3b5f33;
+$panel-color: $background-color;
+$item-hover-color: $background-hover-color;
+
+.listarea-root{
+    padding: 40px 5%;
+    width: 60%;
+    border-right: 5px solid #020c1f;
+    overflow-y: scroll;
+}
+
+.list{
+    border: 1px solid $button-color;
+    box-shadow: 0px 0px 5px black;
+
+    .button{
+        background-color: $button-color;
+        border-style: solid none;
+        border-width: 1px 0px;
+        border-color:$panel-color;
+
+        .header-buttons{
+            display: none;
+        }
+
+        &:hover {
+            background-color: $button-hover-color;
+
+            .header-buttons{
+                display: inline-block;
+            }
+        }
+    }
+
+    .panel{
+        background-color: $panel-color;
+        border: 1px solid $button-color;
+        box-shadow: inset 0px 0px 5px $button-color;
+        padding: 0px;
+        font-size: 1rem;
+    }
+
+    .item{
+        padding: 0.8em 0.8em 0.8em 2em;
+
+        .item-buttons{
+            display: none;
+        }
+
+        &:hover {
+            background-color: $item-hover-color;
+
+            .item-buttons{
+                display: inline-block;
+            }
+        }
+    }
+   
+}
