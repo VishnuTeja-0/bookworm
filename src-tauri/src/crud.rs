@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use core::fmt;
 use std::path::{Path,PathBuf};
 
+const APP_FOLDER_NAME: &str = "bookworm";
 const DB_NAME: &str = "pages.db";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -26,10 +27,11 @@ impl fmt::Display for Page {
 pub fn get_db_path() -> PathBuf {
     let db_path: PathBuf = if let Some(proj_dirs) = BaseDirs::new(){
         let root: &Path = proj_dirs.data_local_dir();
-        root.join(DB_NAME)  
+        root.join(&APP_FOLDER_NAME).join(&DB_NAME)  
     }
     else{
-        PathBuf::from(&DB_NAME)
+        let root = PathBuf::from(&APP_FOLDER_NAME);
+        root.join(&DB_NAME)
     };
 
     db_path
@@ -78,6 +80,28 @@ pub fn get_entries() -> Result<Vec<Page>>{
     }
 
     Ok(pages)
+}
+
+pub fn get_category_urls(category: &str) -> Result<Vec<String>> {
+    let connection = Connection::open(get_db_path())?;
+
+    let mut stmt = connection.prepare(
+        "SELECT p.link FROM pages p
+        WHERE p.category = :category;"
+    )?;
+
+    let links_iter = stmt.query_map([category], |row|{
+        Ok(
+            row.get(0)?
+        )
+    })?;
+
+    let mut links: Vec<String> = Vec::new();
+    for link in links_iter{
+        links.push(link?);
+    }
+
+    Ok(links)
 }
 
 pub fn create_entry(page: Page) -> Result<()>{

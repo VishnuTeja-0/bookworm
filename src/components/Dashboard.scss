@@ -1,15 +1,12 @@
-$border-blue: #06132e;
+@import "/src/styles.scss";
 
 .dashboard-root{
-    background-color: $border-blue;
+    background-color: $background-color;
 }
 
 .dashboard-body{
     width: 100%;
     display: flex;
-}
-
-.listarea-root{
-    width: 60%;
-    border-right: 5px solid #020c1f
+    height: calc(100vh - $header-height);
+    overflow-y: hidden;
 }
