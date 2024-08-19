@@ -1,0 +1,12 @@
+@import "/src/styles.scss";
+
+.dashboard-root{
+    background-color: $background-color;
+}
+
+.dashboard-body{
+    width: 100%;
+    display: flex;
+    height: calc(100vh - $header-height);
+    overflow-y: hidden;
+}

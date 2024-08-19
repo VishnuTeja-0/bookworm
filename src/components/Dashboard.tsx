@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
+import Header from "./Header/Header";
+import ListArea from "./ListArea/ListArea";
+import "./Dashboard.scss";
 
 function Dashboard() {
     return(
-        <h1>This is the Dashboard</h1>
+        <div className="dashboard-root">
+            <Header />
+            <div className="dashboard-body">
+                <ListArea />
+            </div>
+        </ div>
     )
 }
 

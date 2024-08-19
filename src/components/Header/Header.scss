@@ -1,0 +1,8 @@
+@import "/src/styles.scss";
+
+.main-bar{
+    min-height: $header-height;
+    background-color: $header-color;
+    border-bottom: rgba(120, 120, 120, 0.4) solid 1px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 1);
+}
