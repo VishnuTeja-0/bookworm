@@ -3,7 +3,7 @@
 
 use std::process::Command;
 
-use crud::{create_database, create_entry, get_category_urls, get_entries, Page};
+use crud::{create_database, create_entry, get_category_urls, get_entries, get_entry, Page};
 use browser::{get_default_browser, map_browser_command};
 use serde::Serialize;
 use Messages::*;
@@ -43,20 +43,6 @@ impl Messages{
 fn handle_error(message: &str, err: &dyn std::error::Error) -> String {
     eprintln!("{err}");
     message.to_owned()
-}
-
-#[tauri::command]
-fn get_pages() -> String {
-    let get_result = get_entries();
-    match get_result{
-        Ok(pages) => {
-            match serde_json::to_string(&pages){
-                Ok(json) => json,
-                Err(err) => handle_error(GetError.message(), &err)
-            }
-        },
-        Err(err) => handle_error(GetError.message(), &err)
-    }
 }
 
 #[tauri::command]
@@ -105,6 +91,20 @@ fn get_pages_listview() -> String {
             }
 
             match serde_json::to_string(&pages_listview){
+                Ok(json) => json,
+                Err(err) => handle_error(GetError.message(), &err)
+            }
+        },
+        Err(err) => handle_error(GetError.message(), &err)
+    }
+}
+
+#[tauri::command]
+fn get_page(id: u32) -> String {
+    let get_result = get_entry(id);
+    match get_result{
+        Ok(page) => {
+            match serde_json::to_string(&page){
                 Ok(json) => json,
                 Err(err) => handle_error(GetError.message(), &err)
             }
@@ -206,10 +206,8 @@ fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Erro
 
             let get_result = get_entries();
             match get_result{
-                Ok(pages) => {
-                    for page in pages {
-                        println!("{}", page);
-                    }
+                Ok(_) => {
+                    
                 }
                 Err(err) => {
                     println!("{}", err);
@@ -227,7 +225,7 @@ fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Erro
 fn main() {
     tauri::Builder::default()
         .setup(init_app)
-        .invoke_handler(tauri::generate_handler![get_pages, create_page, get_pages_listview, open_browser_window])
+        .invoke_handler(tauri::generate_handler![get_page, create_page, get_pages_listview, open_browser_window])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

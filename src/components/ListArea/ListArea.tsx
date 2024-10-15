@@ -1,20 +1,26 @@
 import {invoke} from '@tauri-apps/api/tauri';
-import { Button, ButtonGroup, Accordion, AccordionItem, AccordionButton, Box, AccordionPanel} from "@chakra-ui/react";
+import { Button, ButtonGroup, Accordion, AccordionItem, AccordionButton, Box, AccordionPanel, useDisclosure} from "@chakra-ui/react";
 import { FaPlus, FaPencilAlt, FaExternalLinkAlt, FaTrash } from "react-icons/fa";
 import './ListArea.scss';
 import { IListData } from "../../models/IListData";
 import { useEffect, useState } from 'react';
+import PageForm from './PageForm/PageForm';
 
 function ListArea(){
     const [isLoading, setLoading] = useState<boolean>(true);
     const [listData, setPageData] = useState<IListData[]>([]);
+    const [listCategories, setCategories] = useState<string[]>([]);
+    const {isOpen, onOpen, onClose} = useDisclosure()
 
-    useEffect(() => {
+    const getListData = () => {
         invoke<string>('get_pages_listview')
-        .then((res) => {
-            console.log(res);
-            let json = JSON.parse(res);
-            setPageData(json);
+        .then((json) => {
+            let res : IListData[] = JSON.parse(json);
+            setPageData(res);
+            if(res.length > 0){
+                let categories: string[] = res.map(el => el.category);
+                setCategories(categories);
+            }
             setLoading(false); 
         })
         .catch((message) => {
@@ -22,7 +28,10 @@ function ListArea(){
             console.log(message);
             alert(message);
         });
-        
+    }
+
+    useEffect(() => {
+        getListData();
     }, [])
 
     const openBrowserWindow = (linkString: string, isUrl: boolean) => {
@@ -44,8 +53,18 @@ function ListArea(){
         listData && listData.length == 0 ? <></> :
         <div className="listarea-root">
             <ButtonGroup>
-                <Button colorScheme='green' variant='solid' size={'md'} p={3} leftIcon={<FaPlus />}><Box as='span' pt={"4%"}>Add Page</Box></Button>
+                <Button onClick = {onOpen} colorScheme='green' variant='solid' size={'md'} p={3} leftIcon={<FaPlus />}>
+                    <Box as='span' pt={"5%"}>{"Add Page"}</Box>
+                </Button>
             </ButtonGroup>
+
+            <PageForm 
+                isOpen = {isOpen} 
+                onClose = {onClose} 
+                id = {0}
+                listData = {listData}
+                listCategories = {listCategories}
+                getListData = {getListData} />
 
             <Accordion className={'list'} allowMultiple textColor={'white'} mt={4}>
                 {

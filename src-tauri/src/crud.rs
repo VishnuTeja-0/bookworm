@@ -114,3 +114,26 @@ pub fn create_entry(page: Page) -> Result<()>{
 
     Ok(())  
 }
+
+pub fn get_entry(id: u32) -> Result<Page> {
+    let connection = Connection::open(get_db_path())?;
+
+    let mut stmt = connection.prepare(
+        "SELECT p.name, p.link, p.desc, p.category FROM pages p
+        WHERE p.id = :id;"
+    )?;
+
+    let page: Page = stmt.query_row([id], |row| {
+        Ok(
+            Page{
+                id,
+                name: row.get(0)?,
+                url:  row.get(1)?,
+                description: row.get(2)?,
+                category: row.get(3)?
+            }
+        )
+    })?;
+    
+    Ok(page)
+}
