@@ -5,6 +5,7 @@ use directories::{BaseDirs, ProjectDirs};
 use serde::{Deserialize, Serialize};
 use core::fmt;
 use std::path::{Path,PathBuf};
+use std::fs;
 
 const APP_FOLDER_NAME: &str = "bookworm";
 const DB_NAME: &str = "pages.db";
@@ -33,6 +34,12 @@ pub fn get_db_path() -> PathBuf {
         let root = PathBuf::from(&APP_FOLDER_NAME);
         root.join(&DB_NAME)
     };
+
+    if let Some(parent_dir) = db_path.parent() {
+        if !parent_dir.exists() {
+            fs::create_dir_all(parent_dir).expect("Failed to create the application folder.");
+        }
+    }
 
     db_path
 }
@@ -104,17 +111,6 @@ pub fn get_category_urls(category: &str) -> Result<Vec<String>> {
     Ok(links)
 }
 
-pub fn create_entry(page: Page) -> Result<()>{
-    let connection = Connection::open(get_db_path())?;
-
-    connection.execute(
-        "INSERT INTO pages (name, link, desc, category) VALUES (?1, ?2, ?3, ?4)", 
-        (&page.name, &page.url, &page.description, &page.category)
-    )?;
-
-    Ok(())  
-}
-
 pub fn get_entry(id: u32) -> Result<Page> {
     let connection = Connection::open(get_db_path())?;
 
@@ -136,4 +132,39 @@ pub fn get_entry(id: u32) -> Result<Page> {
     })?;
     
     Ok(page)
+}
+
+pub fn create_entry(page: Page) -> Result<()>{
+    let connection = Connection::open(get_db_path())?;
+
+    connection.execute(
+        "INSERT INTO pages (name, link, desc, category) VALUES (?1, ?2, ?3, ?4)", 
+        (&page.name, &page.url, &page.description, &page.category)
+    )?;
+
+    Ok(())  
+}
+
+pub fn edit_entry(id: u32, page: Page) -> Result<()>{
+    let connection = Connection::open(get_db_path())?;
+
+    connection.execute(
+        "UPDATE pages 
+        SET name = ?1, 
+            link = ?2, 
+            desc = ?3, 
+            category = ?4
+        WHERE pages.id = ?5", 
+        (&page.name, &page.url, &page.description, &page.category, &id)
+    )?;
+
+    Ok(())
+}
+
+pub fn delete_entry(id: u32) -> Result<()>{
+    let connection = Connection::open(get_db_path())?;
+
+    connection.execute("DELETE from pages WHERE id = ?",[&id])?;
+
+    Ok(())
 }

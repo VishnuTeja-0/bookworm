@@ -10,21 +10,29 @@ function ListArea(){
     const [isLoading, setLoading] = useState<boolean>(true);
     const [listData, setPageData] = useState<IListData[]>([]);
     const [listCategories, setCategories] = useState<string[]>([]);
+    const [modalId, setModalId] = useState<number>(0); 
     const {isOpen, onOpen, onClose} = useDisclosure()
 
     const getListData = () => {
-        invoke<string>('get_pages_listview')
-        .then((json) => {
-            let res : IListData[] = JSON.parse(json);
-            setPageData(res);
-            if(res.length > 0){
-                let categories: string[] = res.map(el => el.category);
-                setCategories(categories);
+        invoke<[boolean, string]>('get_pages_listview')
+        .then(([isSuccess, result]) => {
+            if(isSuccess){
+                let res : IListData[] = JSON.parse(result);
+                setPageData(res);
+                if(res.length > 0){
+                    let categories: string[] = res.map(el => el.category);
+                    setCategories(categories);
+                }
+                setLoading(false); 
             }
-            setLoading(false); 
+            else{
+                // error alert
+                console.log(result);
+                alert(result);
+            }
         })
         .catch((message) => {
-            // error alert
+            // error alert: call fail
             console.log(message);
             alert(message);
         });
@@ -46,6 +54,33 @@ function ListArea(){
         })
     }
 
+    const openForm = (id: number = 0) => {
+        setModalId(id);
+        onOpen();
+    }
+
+    const deletePage = (id: number) => {
+        invoke<[boolean, string]>('delete_page', {id: id})
+        .then(([isSuccess, result]) => {
+            if(isSuccess){
+                getListData();
+                // success alert
+                console.log(result);
+                alert(result);
+            }
+            else{
+                // error alert
+                console.log(result);
+                alert(result);
+            }
+        })
+        .catch((error) => {
+            //error alert - call fail
+            console.log(error);
+            alert('Error');
+        })
+    }
+
     return(
         isLoading ? 
         <></>: 
@@ -53,16 +88,15 @@ function ListArea(){
         listData && listData.length == 0 ? <></> :
         <div className="listarea-root">
             <ButtonGroup>
-                <Button onClick = {onOpen} colorScheme='green' variant='solid' size={'md'} p={3} leftIcon={<FaPlus />}>
-                    <Box as='span' pt={"5%"}>{"Add Page"}</Box>
+                <Button onClick = {() => openForm()} colorScheme='green' variant='solid' size={'md'} p={3} leftIcon={<FaPlus />}>
+                    <Box as='span'>{"Add Page"}</Box>
                 </Button>
             </ButtonGroup>
 
             <PageForm 
-                isOpen = {isOpen} 
+                isOpen = {isOpen}
                 onClose = {onClose} 
-                id = {0}
-                listData = {listData}
+                id = {modalId}
                 listCategories = {listCategories}
                 getListData = {getListData} />
 
@@ -90,8 +124,8 @@ function ListArea(){
                                                     onClick={() => openBrowserWindow(pageItem.url, true)}>
                                                     <FaExternalLinkAlt />
                                                 </Button>
-                                                <Button colorScheme='cyan' p={0} borderRadius={"20px"}><FaPencilAlt  /></Button>
-                                                <Button colorScheme='red' p={0} borderRadius={"20px"}><FaTrash /></Button>
+                                                <Button onClick={() => openForm(pageItem.id)} colorScheme='cyan' p={0} borderRadius={"20px"}><FaPencilAlt  /></Button>
+                                                <Button onClick={() => deletePage(pageItem.id)} colorScheme='red' p={0} borderRadius={"20px"}><FaTrash /></Button>
                                             </ButtonGroup>
                                         </Box>
                                     ))

@@ -3,7 +3,7 @@
 
 use std::process::Command;
 
-use crud::{create_database, create_entry, get_category_urls, get_entries, get_entry, Page};
+use crud::{create_database, create_entry, delete_entry, edit_entry, get_category_urls, get_entries, get_entry, Page};
 use browser::{get_default_browser, map_browser_command};
 use serde::Serialize;
 use Messages::*;
@@ -22,6 +22,10 @@ enum Messages{
     GetError,
     CreateError,
     CreateSuccess,
+    EditError,
+    EditSuccess,
+    DeleteError,
+    DeleteSuccess,
     OpenBrowserError,
     DefaultBrowserError,
     DefaultSuccess
@@ -33,6 +37,10 @@ impl Messages{
             Messages::GetError => "There was an error in fetching your pages",
             Messages::CreateError => "There was an error in creating a new page",
             Messages::CreateSuccess => "Page was successfully created",
+            Messages::EditError => "There was an error in editing page",
+            Messages::EditSuccess => "Page was successfully edited",
+            Messages::DeleteError => "There was an error in deleting page",
+            Messages::DeleteSuccess => "Page was successfully deleted",
             Messages::OpenBrowserError => "There was an error in opening your pages",
             Messages::DefaultBrowserError => "Default browser not recognized or supported",
             Messages::DefaultSuccess => "Success"
@@ -46,7 +54,7 @@ fn handle_error(message: &str, err: &dyn std::error::Error) -> String {
 }
 
 #[tauri::command]
-fn get_pages_listview() -> String {
+fn get_pages_listview() -> (bool,String) {
     let get_result = get_entries();
     match get_result{
         Ok(pages) => {
@@ -91,39 +99,62 @@ fn get_pages_listview() -> String {
             }
 
             match serde_json::to_string(&pages_listview){
-                Ok(json) => json,
-                Err(err) => handle_error(GetError.message(), &err)
+                Ok(json) => (true, json),
+                Err(err) => (false, handle_error(GetError.message(), &err))
             }
         },
-        Err(err) => handle_error(GetError.message(), &err)
+        Err(err) => (false, handle_error(GetError.message(), &err))
     }
 }
 
 #[tauri::command]
-fn get_page(id: u32) -> String {
+fn get_page(id: u32) -> (bool, String) {
     let get_result = get_entry(id);
     match get_result{
         Ok(page) => {
             match serde_json::to_string(&page){
-                Ok(json) => json,
-                Err(err) => handle_error(GetError.message(), &err)
+                Ok(json) => (true, json),
+                Err(err) => (false, handle_error(GetError.message(), &err))
             }
         },
-        Err(err) => handle_error(GetError.message(), &err)
+        Err(err) => (false, handle_error(GetError.message(), &err))
     }
 }
 
 #[tauri::command]
-fn create_page(page_string: &str) -> String{
+fn create_page(page_string: &str) -> (bool, String) {
     match serde_json::from_str::<Page>(page_string){
         Ok(new_page) => {
             let create_result = create_entry(new_page);
             match create_result {
-                Ok(_) => CreateSuccess.message().to_owned(),
-                Err(err) => handle_error(CreateError.message(), &err)
+                Ok(_) => (true, CreateSuccess.message().to_owned()),
+                Err(err) => (false, handle_error(CreateError.message(), &err))
             }
         },
-        Err(err) => handle_error(CreateError.message(), &err)
+        Err(err) => (false, handle_error(CreateError.message(), &err))
+    }
+}
+
+#[tauri::command]
+fn edit_page(id: u32, page_string: &str) -> (bool, String) {
+    match serde_json::from_str::<Page>(page_string){
+        Ok(new_page) => {
+            let edit_result = edit_entry(id, new_page);
+            match edit_result {
+                Ok(_) => (true, EditSuccess.message().to_owned()),
+                Err(err) => (false, handle_error(EditError.message(), &err))
+            }
+        }
+        Err(err) => (false, handle_error(EditError.message(), &err))
+    }
+}
+
+#[tauri::command]
+fn delete_page(id: u32) -> (bool, String) {
+    let delete_result = delete_entry(id);
+    match delete_result {
+        Ok(_) => (true, DeleteSuccess.message().to_owned()),
+        Err(err) => (false, handle_error(DeleteError.message(), &err))
     }
 }
 
@@ -147,15 +178,16 @@ fn open_browser_window(link_string: &str, is_url: bool) -> String {
             // No error object
             return DefaultBrowserError.message().to_owned();
         }
-
+        
         let get_result = get_category_urls(link_string);
         match get_result {
             Ok(urls) => {
                 args.extend_from_slice(&urls);
+                
 
                 match Command::new(browser_command)
-                    .args(&args)
-                    .status()
+                .args(&args)
+                .status()
                 {
                     Ok(status) => {
                         if status.success() {
@@ -166,7 +198,9 @@ fn open_browser_window(link_string: &str, is_url: bool) -> String {
                             return OpenBrowserError.message().to_owned()
                         }
                     }
-                    Err(err) => handle_error(OpenBrowserError.message(), &err)
+                    Err(err) => {
+                        handle_error(DefaultBrowserError.message(), &err)
+                    }
                 }
             }
             Err(err) => handle_error(OpenBrowserError.message(), &err)
@@ -188,16 +222,16 @@ fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Erro
             // let create_result = create_entry(test_page);
             // match create_result{
             //     Ok(_) => {
-            //         let get_result = get_entries();
-            //         match get_result{
-            //             Ok(_) => {
+            //         // let get_result = get_entries();
+            //         // match get_result{
+            //         //     Ok(_) => {
 
-            //             }
-            //             Err(err) => {
-            //                 println!("{}", err);
-            //                 drop(err);
-            //             }
-            //         }
+            //         //     }
+            //         //     Err(err) => {
+            //         //         println!("{}", err);
+            //         //         drop(err);
+            //         //     }
+            //         // }
             //     }
             //     Err(err) => {
             //         println!("{}", err);
@@ -225,7 +259,7 @@ fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Erro
 fn main() {
     tauri::Builder::default()
         .setup(init_app)
-        .invoke_handler(tauri::generate_handler![get_page, create_page, get_pages_listview, open_browser_window])
+        .invoke_handler(tauri::generate_handler![get_page, create_page, edit_page, delete_page, get_pages_listview, open_browser_window])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

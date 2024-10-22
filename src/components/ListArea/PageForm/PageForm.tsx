@@ -1,25 +1,28 @@
-import { Box, Button, FormControl, FormLabel, Input, InputGroup, InputRightAddon, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Popover, PopoverBody, PopoverContent, PopoverHeader, PopoverTrigger, Textarea, useDisclosure } from '@chakra-ui/react';
+import { Box, Button, FormControl, FormLabel, Input, InputGroup, InputRightAddon, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Popover, PopoverBody, PopoverContent, PopoverHeader, PopoverTrigger, Textarea } from '@chakra-ui/react';
 import './PageForm.scss';
 import { invoke } from '@tauri-apps/api/tauri';
-import { IListData } from '../../../models/IListData';
 import { FaChevronDown } from 'react-icons/fa';
 import React, { useEffect, useRef, useState } from 'react';
 import { IPageData } from '../../../models/IPageData';
+import {useForm} from './useForm.ts'
 
 interface PageFormProps{
     isOpen: boolean,
     onClose: () => void,
     id: number,
-    listData: IListData[],
     listCategories: string[],
     getListData: () => void
 }
 
 function PageForm(props: PageFormProps){
-    const [nameValue, setNameValue] = useState<string>("")
-    const [urlValue, setUrlValue] = useState<string>("")
-    const [descriptionValue, setDescriptionValue] = useState<string>("")
-    const [categoryValue, setCategoryValue] = useState<string>("")
+    const defaultFormData = {
+        name: "",
+        url: "",
+        description: "",
+        category: ""
+    }
+
+    const {formValues, isEdited, handleFieldChange, resetForm, setFormData, FormFieldNames} = useForm(defaultFormData)
     const initialFocusRef = useRef<HTMLInputElement>(null)
     const [categorySearchList, setCategorySearchList] = useState<string[]>(props.listCategories)
     const [isOpenCategories, setOpenCategories] = useState<boolean>(false)
@@ -27,30 +30,81 @@ function PageForm(props: PageFormProps){
     const isEditMode: boolean = props.id != 0;
 
     useEffect(() => {
-        if(isEditMode){
-            invoke<string>('get_page', {id: props.id})
-            .then((json) => {
-                let res: IPageData = JSON.parse(json);
-
+        if(isEditMode && props.isOpen){
+            console.log('1');
+            invoke<[boolean, string]>('get_page', {id: props.id})
+            .then(([isSuccess, result]) => {
+                if(isSuccess){
+                    let res: IPageData = JSON.parse(result);
+                    let newFormData = {
+                        name: res.name,
+                        url: res.url,
+                        description: res.description,
+                        category: res.category
+                    }
+                    setFormData(newFormData);
+                }
+                else{
+                    // error alert
+                    console.log(result);
+                    alert(result);
+                }
             })
-            .catch((message) => {
-                // error alert
-                console.log(message);
-                alert(message);
+            .catch((error) => {
+                // error alert: call fail
+                console.log(error);
+                alert("Error");
             });
         }
-    }, [])
+    }, [props.isOpen]);
 
     const handleCategoryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let input: string = event.target.value
-        setCategoryValue(input);
-        setCategorySearchList(props.listCategories.filter(el => el.startsWith(input)));
+        handleFieldChange(FormFieldNames.CATEGORY, input);
+        setCategorySearchList(props.listCategories.filter(el => el.toLowerCase().startsWith(input.toLowerCase())));
+    }
+
+    const handleSubmit = () => {
+        let newPageData: IPageData = {
+            ...formValues,
+            id: props.id
+        }
+        let newPageString = JSON.stringify(newPageData);
+        let callFunction = isEditMode ? 'edit_page' : 'create_page';
+        let callArguments = {...(isEditMode && {id: props.id}), pageString: newPageString}
+        invoke<[boolean, string]>(callFunction, callArguments)
+        .then(([isSuccess, result]) => {
+            if(isSuccess){
+                props.getListData();
+                // success alert
+                console.log(result);
+                alert(result);
+
+                onModalClose();
+            }
+            else{
+                // error alert
+                console.log(result);
+                alert(result);
+            }
+        })
+        .catch((message) => {
+            // error alert: call fail
+            onModalClose();
+            console.log(message);
+            alert("Error");
+        })
+    }
+
+    const onModalClose = () => {
+        setFormData(defaultFormData);
+        props.onClose();
     }
 
     return(
-        <Modal isOpen = {props.isOpen} onClose = {props.onClose}>
+        <Modal isOpen = {props.isOpen} onClose = {onModalClose}>
             <ModalOverlay />
-            <ModalContent>
+            <ModalContent className={"modal-form"}>
                 <ModalHeader>Page Details</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
@@ -60,48 +114,66 @@ function PageForm(props: PageFormProps){
                             <FormLabel className={'form-field-label'}>Name</FormLabel>
                             <Input 
                                 type = "text"
+                                className={'form-field-input'}
                                 placeholder = "Ex. Project Ideas, Tasks"
-                                value = {nameValue}
-                                onChange = {(e) => setNameValue(e.target.value)}/>
+                                value = {formValues[FormFieldNames.NAME]}
+                                onChange = {(e) => handleFieldChange(FormFieldNames.NAME, e.target.value)}/>
                         </FormControl>
 
                         <FormControl className={'form-field'} isRequired>
                             <FormLabel className={'form-field-label'}>URL Link</FormLabel>
                             <Input 
-                                type = "text" 
+                                type = "text"
+                                className={'form-field-input'} 
                                 placeholder = "Ex. https://google.com"
-                                value = {urlValue}
-                                onChange = {(e) => setUrlValue(e.target.value)} />
+                                value = {formValues[FormFieldNames.URL]}
+                                onChange = {(e) => handleFieldChange(FormFieldNames.URL, e.target.value)} />
                         </FormControl>
 
                         <FormControl className={'form-field'}>
                             <FormLabel className={'form-field-label'}>Description</FormLabel>
                             <Textarea 
                                 placeholder = "This is what the link is for..."
-                                value = {descriptionValue}
-                                onChange = {(e) => setDescriptionValue(e.target.value)} />
+                                className={'form-field-input'}
+                                value = {formValues[FormFieldNames.DESCRIPTION]}
+                                onChange = {(e) => handleFieldChange(FormFieldNames.DESCRIPTION,e.target.value)} />
                         </FormControl>
 
                         <FormControl className={'form-field'} isRequired>
                             <FormLabel className={'form-field-label'}>Category</FormLabel>                        
                                 <Popover
                                     initialFocusRef={initialFocusRef}
-                                    placement='bottom'
+                                    placement = 'bottom'
                                     matchWidth = {true}
                                     isLazy = {true}
-                                    isOpen = {isOpenCategories && categorySearchList.length > 1}>
+                                    isOpen = {
+                                        isOpenCategories && 
+                                        (
+                                            categorySearchList.length > 1 ||
+                                            (
+                                                categorySearchList.length == 1 &&
+                                                categorySearchList[0] !== formValues[FormFieldNames.CATEGORY]
+                                            )
+                                        )
+                                    }>
                                     <PopoverTrigger>
                                         <InputGroup>
                                             <Input 
                                                 type = "text" 
+                                                className={'form-field-input'}
+                                                borderRight={'none'}
                                                 placeholder= 'Enter page category or...'
                                                 onChange={handleCategoryChange}
-                                                value={categoryValue}
+                                                value={formValues[FormFieldNames.CATEGORY]}
                                                 ref={initialFocusRef}
                                                 onFocus={() => setOpenCategories(true)}
                                                 onBlur={() => setOpenCategories(false)}
                                                 />
                                             <InputRightAddon
+                                                bgColor={'rgba(0, 0, 0, 0)'}
+                                                className={'form-field-input'}
+                                                color={'rgba(255, 255, 255, 0.3)'}
+                                                borderLeft={'none'}
                                                 onClick={() => setOpenCategories(!isOpenCategories)}>
                                                     <FaChevronDown />
                                             </InputRightAddon>
@@ -111,14 +183,17 @@ function PageForm(props: PageFormProps){
                                         <PopoverHeader borderBottom={'2px'} borderColor={'gray.200'}>
                                             {"Select existing category"}
                                         </PopoverHeader>
-                                        <PopoverBody>
+                                        <PopoverBody 
+                                            maxHeight={'175px'}
+                                            overflowY={'scroll'}>
                                             {
                                                 categorySearchList.map(category => (
                                                     <Box className={'category-item'} 
-                                                        p={2} 
-                                                        borderBottom={"1px"} 
-                                                        onClick={() => {
-                                                            setCategoryValue(category);
+                                                        p={2}
+                                                        m={1}  
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleFieldChange(FormFieldNames.CATEGORY, category);
                                                             setCategorySearchList([category])
                                                         }}>
                                                             {category}
@@ -131,16 +206,16 @@ function PageForm(props: PageFormProps){
                         </FormControl>
                     </div>
                 </ModalBody>
-                <ModalFooter>
+                <ModalFooter pt={6}>
                     <Button colorScheme='pink' variant='solid' size={'sm'} p={3} ml={2}
                             isDisabled = {!isEdited}
-                            onClick = {handleReset}>
-                        <Box as='span' pt={1}>{"Reset Changes"}</Box>
+                            onClick = {resetForm}>
+                        <Box as='span'>{"Reset Changes"}</Box>
                     </Button>
                     <Button colorScheme='blue' variant='solid' size={'sm'} p={3} ml={2}
                             isDisabled = {!isEdited}
                             onClick = {handleSubmit}>
-                        <Box as='span' pt={1}>{"Submit"}</Box>
+                        <Box as='span'>{"Submit"}</Box>
                     </Button>
                 </ModalFooter>
             </ModalContent>

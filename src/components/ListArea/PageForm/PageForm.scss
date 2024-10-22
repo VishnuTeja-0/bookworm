@@ -1,7 +1,24 @@
+@import "/src/styles.scss";
+
+$field-color: rgba(255, 255, 255, 0.3);
+
+.modal-form, .category-list {
+    color: #f6f6f6 !important;
+    background-color: $background-color !important;
+}
+
+.form-field-input{
+    border-color: $field-color !important;
+}
+
 .form-field {
     margin-bottom: 2.5%;
 }
 
 .form-field-label {
     margin-bottom: 2px !important;
+}
+
+.category-item:not(:last-child) {
+    border-bottom: 1px solid $field-color;
 }

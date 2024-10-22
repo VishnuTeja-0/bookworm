@@ -14,7 +14,7 @@ impl Browsers {
     fn browser_app_names(browser: &str) -> Browsers{
         match browser.to_lowercase().as_str() {
             "google-chrome" | "chrome" | "chrome.exe" | "google chrome" | "google chrome.app" | "com.google.chrome" | "google-chrome.desktop" => Browsers::Chrome,
-            "microsoft-edge" | "edge" | "msedge.exe" | "microsoft edge" | "microsoft edge.app" | "com.microsoft.edge" | "microsoft-edge.desktop" => Browsers::Edge,
+            "microsoft-edge" | "edge" | "msedge" | "msedge.exe" | "microsoft edge" | "microsoft edge.app" | "com.microsoft.edge" | "microsoft-edge.desktop" | "msedgehtm" => Browsers::Edge,
             "firefox" | "firefox.exe" | "mozilla firefox" | "firefox.app" | "org.mozilla.firefox" | "firefox.desktop" => Browsers::Firefox,
             "safari" | "safari.app" | "com.apple.safari" => Browsers::Safari,
             _ => Browsers::Unsupported
