@@ -43,14 +43,21 @@ function ListArea(){
     }, [])
 
     const openBrowserWindow = (linkString: string, isUrl: boolean) => {
-        invoke<string>('open_browser_window', {linkString: linkString, isUrl: isUrl})
-        .then((res) => {
-            console.log(res);
+        invoke<[boolean, string]>('open_browser_window', {linkString: linkString, isUrl: isUrl})
+        .then(([isSuccess, result]) => {
+            if(isSuccess){
+                console.log(result)
+            }
+            else{
+                // error alert
+                console.log(result);
+                alert(result);
+            }
         })
         .catch((message) => {
-            //error alert
+            // error alert - call fail
             console.log(message);
-            alert(message);
+            alert('Error');
         })
     }
 

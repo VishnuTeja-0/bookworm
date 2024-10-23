@@ -159,24 +159,24 @@ fn delete_page(id: u32) -> (bool, String) {
 }
 
 #[tauri::command]
-fn open_browser_window(link_string: &str, is_url: bool) -> String {
+fn open_browser_window(link_string: &str, is_url: bool) -> (bool, String) {
     if is_url {
         match webbrowser::open(link_string) {
-            Ok(_) => DefaultSuccess.message().to_owned(),
-            Err(err) => handle_error(OpenBrowserError.message(), &err)
+            Ok(_) => (true, DefaultSuccess.message().to_owned()),
+            Err(err) => (false, handle_error(OpenBrowserError.message(), &err))
         }
     }
     else{
         let default_browser = match get_default_browser() {
             Some(browser) => browser,
-            None => return DefaultBrowserError.message().to_owned(),
+            None => return (false, DefaultBrowserError.message().to_owned()),
         };
 
         let (browser_command, mut args) = map_browser_command(&default_browser, &link_string);
         
         if browser_command.is_empty(){
             // No error object
-            return DefaultBrowserError.message().to_owned();
+            return (false, DefaultBrowserError.message().to_owned())
         }
         
         let get_result = get_category_urls(link_string);
@@ -191,19 +191,19 @@ fn open_browser_window(link_string: &str, is_url: bool) -> String {
                 {
                     Ok(status) => {
                         if status.success() {
-                            return DefaultSuccess.message().to_owned()
+                            (true, DefaultSuccess.message().to_owned())
                         }
                         else{
                             // No error object
-                            return OpenBrowserError.message().to_owned()
+                            (false, OpenBrowserError.message().to_owned())
                         }
                     }
                     Err(err) => {
-                        handle_error(DefaultBrowserError.message(), &err)
+                        (false, handle_error(DefaultBrowserError.message(), &err))
                     }
                 }
             }
-            Err(err) => handle_error(OpenBrowserError.message(), &err)
+            Err(err) => (false, handle_error(OpenBrowserError.message(), &err))
         }
     }
 }
@@ -261,5 +261,5 @@ fn main() {
         .setup(init_app)
         .invoke_handler(tauri::generate_handler![get_page, create_page, edit_page, delete_page, get_pages_listview, open_browser_window])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("error while running app");
 }
