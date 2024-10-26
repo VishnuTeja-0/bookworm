@@ -1,12 +1,14 @@
-import {invoke} from '@tauri-apps/api/tauri';
+import {invoke} from '@tauri-apps/api/core';
 import { Button, ButtonGroup, Accordion, AccordionItem, AccordionButton, Box, AccordionPanel, useDisclosure} from "@chakra-ui/react";
 import { FaPlus, FaPencilAlt, FaExternalLinkAlt, FaTrash } from "react-icons/fa";
 import './ListArea.scss';
 import { IListData } from "../../models/IListData";
+import { IPageData } from '../../models/IPageData';
 import { useEffect, useState } from 'react';
 import PageForm from './PageForm/PageForm';
 
-function ListArea(){
+
+function ListArea(props: {setActivePage: React.Dispatch<React.SetStateAction<IPageData>>}){
     const [isLoading, setLoading] = useState<boolean>(true);
     const [listData, setPageData] = useState<IListData[]>([]);
     const [listCategories, setCategories] = useState<string[]>([]);
@@ -123,7 +125,12 @@ function ListArea(){
                             <AccordionPanel className={'panel'}>
                                 {
                                     listItem.pageList.map(pageItem =>(
-                                        <Box className="item" data-id={pageItem.id} display='flex' justifyContent='space-between'>
+                                        <Box 
+                                            className="item" 
+                                            data-id={pageItem.id} 
+                                            display='flex' 
+                                            justifyContent='space-between'
+                                            onClick={() => props.setActivePage(pageItem)}>
                                             <span>{pageItem.name}</span>
 
                                             <ButtonGroup className='item-buttons' variant='outline' size='xs'>

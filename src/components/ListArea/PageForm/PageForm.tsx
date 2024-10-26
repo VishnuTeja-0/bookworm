@@ -1,6 +1,6 @@
 import { Box, Button, FormControl, FormLabel, Input, InputGroup, InputRightAddon, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Popover, PopoverBody, PopoverContent, PopoverHeader, PopoverTrigger, Textarea } from '@chakra-ui/react';
 import './PageForm.scss';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { FaChevronDown } from 'react-icons/fa';
 import React, { useEffect, useRef, useState } from 'react';
 import { IPageData } from '../../../models/IPageData';
