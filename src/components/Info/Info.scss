@@ -1,0 +1,44 @@
+@import "/src/styles.scss";
+
+.info-root{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: $dashboard-section-padding;
+    width: 50%;
+}
+
+.preview{
+    left: 10%;
+    min-width: 80%;
+    min-height: 55%;
+}
+
+.summary{
+    width: 100%;
+}
+
+.summary-field{
+    display: flex;
+}
+
+.summary-heading{
+    color: #c8c8c8;
+    font-weight: 600;
+    width: 30%;
+}
+
+.summary-detail{
+    width: 70%;
+}
+
+.link-text{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.link-icon{
+    margin: 6px 4px 0px;
+    font-size: 0.75em;
+}

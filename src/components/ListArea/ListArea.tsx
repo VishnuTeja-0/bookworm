@@ -68,7 +68,8 @@ function ListArea(props: {setActivePage: React.Dispatch<React.SetStateAction<IPa
         onOpen();
     }
 
-    const deletePage = (id: number) => {
+    const deletePage = (e: React.MouseEvent<HTMLButtonElement>,id: number) => {
+        e.stopPropagation();
         invoke<[boolean, string]>('delete_page', {id: id})
         .then(([isSuccess, result]) => {
             if(isSuccess){
@@ -139,7 +140,7 @@ function ListArea(props: {setActivePage: React.Dispatch<React.SetStateAction<IPa
                                                     <FaExternalLinkAlt />
                                                 </Button>
                                                 <Button onClick={() => openForm(pageItem.id)} colorScheme='cyan' p={0} borderRadius={"20px"}><FaPencilAlt  /></Button>
-                                                <Button onClick={() => deletePage(pageItem.id)} colorScheme='red' p={0} borderRadius={"20px"}><FaTrash /></Button>
+                                                <Button onClick={(e) => deletePage(e, pageItem.id)} colorScheme='red' p={0} borderRadius={"20px"}><FaTrash /></Button>
                                             </ButtonGroup>
                                         </Box>
                                     ))

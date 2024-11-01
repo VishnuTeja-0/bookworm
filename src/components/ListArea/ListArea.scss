@@ -6,7 +6,7 @@ $panel-color: $background-color;
 $item-hover-color: $background-hover-color;
 
 .listarea-root{
-    padding: 40px 5%;
+    padding: $dashboard-section-padding;
     width: 50%;
     border-right: 5px solid #020c1f;
     overflow-y: scroll;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Header from "./Header/Header";
 import ListArea from "./ListArea/ListArea";
@@ -9,6 +9,10 @@ import { IPageData } from "../models/IPageData";
 
 function Dashboard() {
     const [activePage, setActivePage] = useState<IPageData>({} as IPageData);
+
+    useEffect(() => {
+        
+    }, [activePage])
 
     return(
         <div className="dashboard-root">

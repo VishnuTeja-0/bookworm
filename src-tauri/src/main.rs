@@ -8,7 +8,9 @@ use crud::{
     create_database, create_entry, delete_entry, edit_entry, get_category_urls, get_entries,
     get_entry, Page,
 };
+use rusqlite::ffi::Error;
 use serde::Serialize;
+use tauri::{LogicalPosition, LogicalSize, Manager, PhysicalPosition, PhysicalSize, Webview, Window};
 use Messages::*;
 
 mod browser;
@@ -195,6 +197,16 @@ fn open_browser_window(link_string: &str, is_url: bool) -> (bool, String) {
     }
 }
 
+// fn setup_window<'a>(_app: &'a mut tauri::App) -> Result<()>{
+    
+
+//     Ok(())
+// }
+
+// fn set_preview_url(link_string: &str) -> (bool, String) {
+    
+// }
+
 fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let init_database_result = create_database();
     match init_database_result {
@@ -236,15 +248,36 @@ fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Erro
         }
         Err(err) => {
             println!("{}", err);
+            drop(err);
         }
     }
+
     Ok(())
 }
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .setup(init_app)
+        .setup(|app| {
+            let _window: Window = app.get_window("main").expect("Error while running app");
+
+            let size = _window.inner_size().unwrap();
+            let width = f64::from(size.width);
+            let height = f64::from(size.height);
+
+            _window.add_child(
+                tauri::webview::WebviewBuilder::new(
+                    "preview",
+                    tauri::WebviewUrl::External("https://google.com".parse().unwrap())
+                ).auto_resize(),
+                LogicalPosition::new(width * 0.55, 100.0),
+                LogicalSize::new( width * 0.4, height * 0.4),
+            )?;
+
+            let _ = _window.set_size(PhysicalSize{width: width + 1.0, height: height});
+
+            init_app(app)
+        })
         .invoke_handler(tauri::generate_handler![
             get_page,
             create_page,
