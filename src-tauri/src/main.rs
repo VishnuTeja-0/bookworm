@@ -8,9 +8,9 @@ use crud::{
     create_database, create_entry, delete_entry, edit_entry, get_category_urls, get_entries,
     get_entry, Page,
 };
-use rusqlite::ffi::Error;
+
 use serde::Serialize;
-use tauri::{LogicalPosition, LogicalSize, Manager, PhysicalPosition, PhysicalSize, Webview, Window};
+use tauri::{App, Emitter, LogicalPosition, LogicalSize, Manager, PhysicalPosition, PhysicalSize, Webview, Window};
 use Messages::*;
 
 mod browser;
@@ -33,6 +33,7 @@ enum Messages {
     DeleteSuccess,
     OpenBrowserError,
     DefaultBrowserError,
+    SetPreviewError,
     DefaultSuccess,
 }
 
@@ -48,6 +49,7 @@ impl Messages {
             Messages::DeleteSuccess => "Page was successfully deleted",
             Messages::OpenBrowserError => "There was an error in opening your pages",
             Messages::DefaultBrowserError => "Default browser not recognized or supported",
+            Messages::SetPreviewError => "There was an error in the preview window",            
             Messages::DefaultSuccess => "Success",
         }
     }
@@ -197,15 +199,18 @@ fn open_browser_window(link_string: &str, is_url: bool) -> (bool, String) {
     }
 }
 
-// fn setup_window<'a>(_app: &'a mut tauri::App) -> Result<()>{
-    
+#[tauri::command]
+fn set_preview_url(link_string: &str, app: tauri::AppHandle) -> (bool, String) {
+    let set_preview = match app.get_webview("preview") {
+        Some(wv) => {
+            let _ = wv.eval(&format!("window.location.replace('{}')", link_string));
+            (true, DefaultSuccess.message().to_owned())
+        },
+        None => (false, SetPreviewError.message().to_owned())
+    };
 
-//     Ok(())
-// }
-
-// fn set_preview_url(link_string: &str) -> (bool, String) {
-    
-// }
+    set_preview
+}
 
 fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let init_database_result = create_database();
@@ -284,7 +289,8 @@ fn main() {
             edit_page,
             delete_page,
             get_pages_listview,
-            open_browser_window
+            open_browser_window,
+            set_preview_url
         ])
         .run(tauri::generate_context!())
         .expect("error while running app");

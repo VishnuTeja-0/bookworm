@@ -11,7 +11,7 @@ interface PageFormProps{
     onClose: () => void,
     id: number,
     listCategories: string[],
-    getListData: () => void
+    getListData: (newActivePageData?: IPageData) => void
 }
 
 function PageForm(props: PageFormProps){
@@ -75,7 +75,7 @@ function PageForm(props: PageFormProps){
         invoke<[boolean, string]>(callFunction, callArguments)
         .then(([isSuccess, result]) => {
             if(isSuccess){
-                props.getListData();
+                props.getListData(newPageData);
                 // success alert
                 console.log(result);
                 alert(result);

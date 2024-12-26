@@ -11,7 +11,24 @@ function Dashboard() {
     const [activePage, setActivePage] = useState<IPageData>({} as IPageData);
 
     useEffect(() => {
-        
+        let defaultPreview = window.location.href + "/src/components/Info/DefaultPreview.html";
+        let activeLink = activePage && activePage.url ? activePage.url : defaultPreview;
+        invoke<[boolean, string]>('set_preview_url', {linkString: activeLink})
+        .then(([isSuccess, result]) => {
+            if(isSuccess){
+                console.log(result);
+            }
+            else{
+                // error alert
+                console.log(result);
+                alert(result);
+            }
+        })
+        .catch((err) => {
+            //error alert - call fail
+            console.log(err);
+            alert(err);
+        })
     }, [activePage])
 
     return(

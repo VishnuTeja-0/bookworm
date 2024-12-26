@@ -15,7 +15,7 @@ function ListArea(props: {setActivePage: React.Dispatch<React.SetStateAction<IPa
     const [modalId, setModalId] = useState<number>(0); 
     const {isOpen, onOpen, onClose} = useDisclosure()
 
-    const getListData = () => {
+    const getListData = (newActivePageData?: IPageData) => {
         invoke<[boolean, string]>('get_pages_listview')
         .then(([isSuccess, result]) => {
             if(isSuccess){
@@ -24,6 +24,9 @@ function ListArea(props: {setActivePage: React.Dispatch<React.SetStateAction<IPa
                 if(res.length > 0){
                     let categories: string[] = res.map(el => el.category);
                     setCategories(categories);
+                }
+                if(newActivePageData){
+                    props.setActivePage(newActivePageData);
                 }
                 setLoading(false); 
             }
@@ -73,7 +76,7 @@ function ListArea(props: {setActivePage: React.Dispatch<React.SetStateAction<IPa
         invoke<[boolean, string]>('delete_page', {id: id})
         .then(([isSuccess, result]) => {
             if(isSuccess){
-                getListData();
+                getListData({} as IPageData);
                 // success alert
                 console.log(result);
                 alert(result);
@@ -112,17 +115,17 @@ function ListArea(props: {setActivePage: React.Dispatch<React.SetStateAction<IPa
 
             <Accordion className={'list'} allowMultiple textColor={'white'} mt={4}>
                 {
-                    listData.map(listItem =>(
+                    listData.map((listItem, index) =>(
                         <AccordionItem>
-                                <AccordionButton className={'button'} p={4}>
-                                    <Box as='span' flex='1' textAlign='left'>{listItem.category}</Box>
+                            <AccordionButton className={'button'} p={4}>
+                                <Box as='span' flex='1' textAlign='left'>{listItem.category}</Box>
 
-                                    <ButtonGroup className='header-buttons'>
-                                        <Button colorScheme='teal' variant='solid' p={0} size='xs' borderRadius={"20px"}
-                                            onClick={(e) => {openBrowserWindow(listItem.category, false); e.preventDefault();}}
-                                        ><FaExternalLinkAlt /></Button>
-                                    </ButtonGroup>
-                                </AccordionButton>
+                                <ButtonGroup className='header-buttons'>
+                                    <Button colorScheme='teal' variant='solid' p={0} size='xs' borderRadius={"20px"}
+                                        onClick={(e) => {openBrowserWindow(listItem.category, false); e.preventDefault();}}
+                                    ><FaExternalLinkAlt /></Button>
+                                </ButtonGroup>
+                            </AccordionButton>
                             <AccordionPanel className={'panel'}>
                                 {
                                     listItem.pageList.map(pageItem =>(
