@@ -14,21 +14,21 @@
     min-height: 55%;
 }
 
-.summary{
-    width: 100%;
+.detail-card{
+    background-color: $header-color !important;
 }
 
-.summary-field{
+.detail-field{
     display: flex;
 }
 
-.summary-heading{
+.detail-heading{
     color: #c8c8c8;
     font-weight: 600;
     width: 30%;
 }
 
-.summary-detail{
+.detail-data{
     width: 70%;
 }
 
@@ -41,4 +41,17 @@
 .link-icon{
     margin: 6px 4px 0px;
     font-size: 0.75em;
+}
+
+.summary-tab{
+    position: absolute;
+    bottom: 0;
+    left: 40%;
+    width: 20%;
+    display: flex;
+    justify-content: center;
+}
+
+.summary-root{
+    background-color: $header-color !important;
 }

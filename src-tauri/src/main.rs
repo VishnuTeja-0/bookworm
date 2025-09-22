@@ -1,13 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::process::Command;
+use std::{iter::Sum, process::Command};
 
 use browser::{get_default_browser, map_browser_command};
 use crud::{
     create_database, create_entry, delete_entry, edit_entry, get_category_urls, get_entries,
     get_entry, Page,
 };
+use summary::{HTTP_CLIENT, batch_extract_site_text};
 
 use serde::Serialize;
 use tauri::{App, Emitter, LogicalPosition, LogicalSize, Manager, PhysicalPosition, PhysicalSize, Webview, Window};
@@ -15,6 +16,7 @@ use Messages::*;
 
 mod browser;
 mod crud;
+mod summary;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,6 +37,7 @@ enum Messages {
     DefaultBrowserError,
     SetPreviewError,
     DefaultSuccess,
+    SummaryError
 }
 
 impl Messages {
@@ -49,7 +52,8 @@ impl Messages {
             Messages::DeleteSuccess => "Page was successfully deleted",
             Messages::OpenBrowserError => "There was an error in opening your pages",
             Messages::DefaultBrowserError => "Default browser not recognized or supported",
-            Messages::SetPreviewError => "There was an error in the preview window",            
+            Messages::SetPreviewError => "There was an error in the preview window",
+            Messages::SummaryError => "There was an error in generating summary",         
             Messages::DefaultSuccess => "Success",
         }
     }
@@ -210,6 +214,34 @@ fn set_preview_url(link_string: &str, app: tauri::AppHandle) -> (bool, String) {
     };
 
     set_preview
+}
+
+#[tauri::command]
+async fn get_summary(link_string: &str, is_url: bool) -> Result<(bool, String), String> {
+    let summary_urls: Vec<String>;
+    if is_url{
+        summary_urls = vec![link_string.to_owned()];
+    } else{
+        match get_category_urls(link_string) {
+            Ok(urls) => summary_urls = urls,
+            Err(err) => return Ok((false, handle_error(SummaryError.message(), &err)))
+        }
+    }
+
+    let mut extracted_texts: Vec<String> = Vec::new();
+    match batch_extract_site_text(summary_urls).await {
+        Ok(texts) => {
+            extracted_texts = texts;
+            if extracted_texts.is_empty() {
+                return Ok((false, SummaryError.message().to_owned()))
+            }
+        },
+        Err(err) => return Ok((false, handle_error(SummaryError.message(), &*err)))
+    }
+
+    let combined = extracted_texts.join("\n\n"); 
+    
+    Ok((true, combined))
 }
 
 fn init_app<'a>(_app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {

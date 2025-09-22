@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { IPageData } from "../../models/IPageData";
 import './Info.scss';
-import { Card, CardBody, CardHeader, Heading, Link } from "@chakra-ui/react";
+import { Button, Card, CardBody, CardHeader, Drawer, DrawerBody, DrawerContent, DrawerHeader, DrawerOverlay, Heading, Link, useDisclosure } from "@chakra-ui/react";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
 function Info(props: {activePage: IPageData}){
     const [isPageActive, setIsPageActive] = useState<boolean>(false);
+    const {isOpen, onOpen, onClose} = useDisclosure();
 
     useEffect(() => {
         let isPageActive: boolean = JSON.stringify(props.activePage) !== "{}";
@@ -18,18 +19,19 @@ function Info(props: {activePage: IPageData}){
 
             </div>
             <div className={"summary"} hidden={!isPageActive}>
-                <Card width={'100%'} backgroundColor={'gray.500'} color={'white'} size='sm' p={2}>
+                <Card className={"detail-card"} width={'100%'} color={'white'} 
+                      size='sm' p={2} boxShadow={"2px 2px 4px 2px black inset, -2px -2px 4px 2px black inset"}>
                     <CardHeader py={1}>
                         <Heading size='sm'>Details</Heading>
                     </CardHeader>
                     <CardBody>
-                        <div className={"summary-field"}>
-                            <span className={"summary-heading"}>NAME:</span>
-                            <span className={"summary-detail"}>{props.activePage.name}</span>
+                        <div className={"detail-field"}>
+                            <span className={"detail-heading"}>NAME:</span>
+                            <span className={"detail-data"}>{props.activePage.name}</span>
                         </div>
-                        <div className={"summary-field"}>
-                            <span className={"summary-heading"}>LINK:</span>
-                            <span className={"summary-detail"}>
+                        <div className={"detail-field"}>
+                            <span className={"detail-heading"}>LINK:</span>
+                            <span className={"detail-data"}>
                                 <Link 
                                     display={'flex'} 
                                     href={props.activePage.url} 
@@ -39,16 +41,31 @@ function Info(props: {activePage: IPageData}){
                                 </Link>
                             </span>
                         </div>
-                        <div className={"summary-field"}>
-                            <span className={"summary-heading"}>DESCRIPTION:</span>
-                            <span className={"summary-detail"}>{props.activePage.description}</span>
+                        <div className={"detail-field"}>
+                            <span className={"detail-heading"}>DESCRIPTION:</span>
+                            <span className={"detail-data"}>{props.activePage.description}</span>
                         </div>
-                        <div className={"summary-field"}>
-                            <span className={"summary-heading"}>CATEGORY:</span>
-                            <span className={"summary-detail"}>{props.activePage.category}</span>
+                        <div className={"detail-field"}>
+                            <span className={"detail-heading"}>CATEGORY:</span>
+                            <span className={"detail-data"}>{props.activePage.category}</span>
                         </div>
                     </CardBody>
                 </Card>
+            </div>
+            <div className="summary-tab">
+                <Button backgroundColor={"teal.200"} size={'sm'}
+                        borderRadius={"4px 4px 0px 0px"} onClick={onOpen}>
+                    Summary
+                </Button>
+                <Drawer isOpen={isOpen} onClose={onClose} placement={"bottom"}>
+                    <DrawerOverlay />
+                    <DrawerContent className={"summary-root"} width={"50%"} marginLeft={"auto"} color={'white'}>
+                        <DrawerHeader>{"Summary"}</DrawerHeader>
+                        <DrawerBody>
+                            
+                        </DrawerBody>
+                    </DrawerContent>
+                </Drawer>
             </div>
         </div>
     )

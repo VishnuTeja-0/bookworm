@@ -8,7 +8,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 const APP_FOLDER_NAME: &str = "bookworm";
-const DB_NAME: &str = "pages.db";
+const PAGES_DB_NAME: &str = "pages.db";
+const CATEGORY_DB_NAME: &str = "categories.db";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Page {
@@ -16,7 +17,7 @@ pub struct Page {
     pub name: String,
     pub url: String,
     pub description: String,
-    pub category: String,
+    pub category_id: u32,
 }
 
 impl fmt::Display for Page {
@@ -24,7 +25,25 @@ impl fmt::Display for Page {
         write!(
             f,
             "Page -> {{ id: {}, name: {}, category: {}}}",
-            self.id, self.name, self.category
+            self.id, self.name, self.category_id
+        )
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Category {
+    pub id: u32,
+    pub name: String,
+    pub description: String,
+    pub parent_id: Option<u32>,
+}
+
+impl fmt::Display for Category {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Category -> {{ id: {}, name: {}, parent_id: {:?} }}",
+            self.id, self.name, self.parent_id
         )
     }
 }
@@ -51,12 +70,22 @@ pub fn create_database() -> Result<()> {
     let connection = Connection::open(get_db_path())?;
 
     connection.execute(
+        "CREATE TABLE IF NOT EXISTS categories(
+            id integer primary key,
+            name text not null,
+            desc text,
+            parent_id integer references categories(id) on delete cascade
+        );",
+        (),
+    )?;
+
+    connection.execute(
         "CREATE TABLE IF NOT EXISTS pages(
             id integer primary key,
             name text not null,
             link text not null,
             desc text,
-            category text
+            category_id integer not null references categories(id) on delete cascade,
         );",
         (),
     )?;
@@ -68,8 +97,8 @@ pub fn get_entries() -> Result<Vec<Page>> {
     let connection = Connection::open(get_db_path())?;
 
     let mut stmt = connection.prepare(
-        "SELECT p.id, p.name, p.link, p.desc, p.category FROM pages p
-        ORDER BY p.category, p.id",
+        "SELECT p.id, p.name, p.link, p.desc, p.category_id FROM pages p
+        ORDER BY p.category_id, p.id",
     )?;
 
     let pages_iter = stmt.query_map([], |row| {
@@ -78,7 +107,7 @@ pub fn get_entries() -> Result<Vec<Page>> {
             name: row.get(1)?,
             url: row.get(2)?,
             description: row.get(3)?,
-            category: row.get(4)?,
+            category_id: row.get(4)?,
         })
     })?;
 
@@ -112,7 +141,7 @@ pub fn get_entry(id: u32) -> Result<Page> {
     let connection = Connection::open(get_db_path())?;
 
     let mut stmt = connection.prepare(
-        "SELECT p.name, p.link, p.desc, p.category FROM pages p
+        "SELECT p.name, p.link, p.desc, p.category_id FROM pages p
         WHERE p.id = :id;",
     )?;
 
@@ -122,7 +151,7 @@ pub fn get_entry(id: u32) -> Result<Page> {
             name: row.get(0)?,
             url: row.get(1)?,
             description: row.get(2)?,
-            category: row.get(3)?,
+            category_id: row.get(3)?,
         })
     })?;
 
@@ -133,8 +162,8 @@ pub fn create_entry(page: Page) -> Result<()> {
     let connection = Connection::open(get_db_path())?;
 
     connection.execute(
-        "INSERT INTO pages (name, link, desc, category) VALUES (?1, ?2, ?3, ?4)",
-        (&page.name, &page.url, &page.description, &page.category),
+        "INSERT INTO pages (name, link, desc, category_id) VALUES (?1, ?2, ?3, ?4)",
+        (&page.name, &page.url, &page.description, &page.category_id),
     )?;
 
     Ok(())
@@ -148,13 +177,13 @@ pub fn edit_entry(id: u32, page: Page) -> Result<()> {
         SET name = ?1, 
             link = ?2, 
             desc = ?3, 
-            category = ?4
+            category_id = ?4
         WHERE pages.id = ?5",
         (
             &page.name,
             &page.url,
             &page.description,
-            &page.category,
+            &page.category_id,
             &id,
         ),
     )?;
