@@ -8,8 +8,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 const APP_FOLDER_NAME: &str = "bookworm";
-const PAGES_DB_NAME: &str = "pages.db";
-const CATEGORY_DB_NAME: &str = "categories.db";
+const DB_NAME: &str = "bookworm.db";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Page {
@@ -93,15 +92,40 @@ pub fn create_database() -> Result<()> {
     Ok(())
 }
 
-pub fn get_entries() -> Result<Vec<Page>> {
+pub fn get_categories() -> Result<Vec<Category>> {
     let connection = Connection::open(get_db_path())?;
 
-    let mut stmt = connection.prepare(
+    let mut categories_stmt = connection.prepare(
+        "SELECT c.id, c.name, c.desc, c.parent_id FROM categories c
+        ORDER BY c.id",
+    )?;
+
+    let categories_iter = categories_stmt.query_map([], |row| {
+        Ok(Category {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            description: row.get(2)?,
+            parent_id: row.get(3)?,
+        })
+    })?;
+
+    let mut categories: Vec<Category> = Vec::new();
+    for category in categories_iter {
+        categories.push(category?);
+    }
+
+    Ok(categories)
+}
+
+pub fn get_pages() -> Result<Vec<Page>> {
+    let connection = Connection::open(get_db_path())?;
+    
+    let mut pages_stmt = connection.prepare(
         "SELECT p.id, p.name, p.link, p.desc, p.category_id FROM pages p
         ORDER BY p.category_id, p.id",
     )?;
 
-    let pages_iter = stmt.query_map([], |row| {
+    let pages_iter = pages_stmt.query_map([], |row| {
         Ok(Page {
             id: row.get(0)?,
             name: row.get(1)?,
